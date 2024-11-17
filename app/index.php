@@ -10,13 +10,9 @@ use Slim\Factory\AppFactory;
 use Slim\Routing\RouteCollectorProxy;
 use Slim\Routing\RouteContext;
 
+use Illuminate\Database\Capsule\Manager as Capsule;
+
 require __DIR__ . '/../vendor/autoload.php';
-
-require_once './db/AccesoDatos.php';
-require_once './utils/codigoAleatorio.php';
-require_once './utils/AutentificadorJWT.php';
-
-// require_once './middlewares/Logger.php';
 
 require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
@@ -26,6 +22,13 @@ require_once './controllers/PedidoProductoController.php';
 
 require_once './middlewares/LoggerMiddleware.php';
 require_once './middlewares/AuthMiddleware.php';
+require_once './middlewares/Logger.php';
+require_once './middlewares/ValidarBodyMiddleware.php';
+
+require_once './db/AccesoDatos.php';
+require_once './utils/codigoAleatorio.php';
+require_once './utils/AutentificadorJWT.php';
+
 
 // Instantiate App
 $app = AppFactory::create();
@@ -37,6 +40,25 @@ $app->addErrorMiddleware(true, true, true);
 
 // Add parse body
 $app->addBodyParsingMiddleware();
+
+// Eloquent
+$container=$app->getContainer();
+
+$capsule = new Capsule();
+
+$capsule->addConnection([
+    'driver' => 'mysql',
+    'host' => 'localhost',
+    'database' => 'tp_la_comanda',
+    'username' => 'root',
+    'password' => '',
+    'charset' => 'utf8',
+    'collation' => 'utf8_unicode_ci',
+    'prefix' => '',
+]);
+
+$capsule->setAsGlobal();
+$capsule->bootEloquent();
 
 // =======================================================================================================//
 // ============================= Rutas por Defecto ====================================================== //
@@ -64,9 +86,10 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
 // =======================================================================================================//
 $app->group('/productos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \ProductoController::class . ':TraerTodos');
+  $group->get('/zonaPreparacion/{zona_preparacion}', \ProductoController::class . ':TraerTodosZonaPreparacion');
   $group->get('/{nombre_producto}', \ProductoController::class . ':TraerUno');
   $group->post('[/]', \ProductoController::class . ':CargarUno');
-  $group->put('/{nombre_producto}', \ProductoController::class . ':ModificarUno');
+  $group->put('[/]', \ProductoController::class . ':ModificarUno');
   $group->delete('/{id_producto}', \ProductoController::class . ':BorrarUno');
 });
 
@@ -98,6 +121,11 @@ $app->group('/pedidoProducto', function (RouteCollectorProxy $group) {
   $group->get('/{id}', \PedidoProductoController::class . ':TraerUno');
   $group->post('[/]', \PedidoProductoController::class . ':CargarUno');
 });
+
+// =======================================================================================================//
+// ============================= Rutas de Loggin ======================================================== //
+// =======================================================================================================//
+$app->post('/Loggin', \Logger::class . ':LogOperacion')->add(new LoggerMiddleware())->add(new ValidarBodyMiddleware(array('nombre_usuario','clave')));
 
 // =======================================================================================================//
 // ============================= Rutas de JWT =========================================================== //

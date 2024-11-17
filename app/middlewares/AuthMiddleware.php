@@ -6,6 +6,8 @@ use Slim\Psr7\Response;
 
 class AuthMiddleware
 {
+    public $usuarios_admitidos = [];
+
     /**
      * Example middleware invokable class
      *

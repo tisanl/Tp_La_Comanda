@@ -6,34 +6,32 @@ use Slim\Psr7\Response;
 
 class LoggerMiddleware
 {
-    /**
-     * Example middleware invokable class
-     *
-     * @param  Request  $request PSR-7 request
-     * @param  RequestHandler $handler PSR-15 request handler
-     *
-     * @return Response
-     */
     public function __invoke(Request $request, RequestHandler $handler): Response
     {   
-        // Fecha antes
-        $before = date('Y-m-d H:i:s');
-        
-        // Continua al controller
+        // Continua al controller. Aca es como dejarlo pasar, voy a hacer la accion a la vuelta
         $response = $handler->handle($request);
-        $existingContent = json_decode($response->getBody());
-    
-        // Despues
-        $response = new Response();
-        $existingContent->fechaAntes = $before;
-        $existingContent->fechaDespues = date('Y-m-d H:i:s');
-        
-        $payload = json_encode($existingContent);
 
-        $response->getBody()->write($payload);
+        // Retomo a partir que se ejecuto Loggin y tomo el body de esa respuesta
+        $existingContent = json_decode($response->getBody());
+
+        if(isset($existingContent->jwt)){
+            $cadena = $existingContent->usuario_id . "," . $existingContent->usuario_nombre . "," . date('Y-m-d H:i:s') . PHP_EOL; 
+
+            $archivo = fopen("ingresos.csv", "a"); // append / agregar
+            fwrite($archivo, $cadena);
+
+            fclose($archivo);
+
+            unset($existingContent->usuario_id);
+            unset($existingContent->usuario_nombre);
+
+            $response = new Response();
+            $response->getBody()->write(json_encode(array('jwt' => $existingContent->jwt)));
+        }
+
         return $response->withHeader('Content-Type', 'application/json');
     }
-
+/*
     public function VerificarRol(Request $request, RequestHandler $handler): Response
     {   
         $parametros = $request->getQueryParams();
@@ -49,5 +47,5 @@ class LoggerMiddleware
         }
 
         return $response->withHeader('Content-Type', 'application/json');
-    }
+    }*/
 }

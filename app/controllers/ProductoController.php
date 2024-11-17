@@ -1,8 +1,12 @@
 <?php
+
 require_once './models/Producto.php';
 require_once './interfaces/IApiUsable.php';
 
-class ProductoController extends Producto implements IApiUsable
+use \App\Models\Producto as Producto;
+
+//class ProductoController extends Producto implements IApiUsable
+class ProductoController implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
@@ -14,7 +18,7 @@ class ProductoController extends Producto implements IApiUsable
         $producto->nombre = $parametros['nombre'];
         $producto->precio = floatval($parametros['precio']);
         $producto->zona_preparacion = $parametros['zona_preparacion'];
-        $producto->crearProducto();
+        $producto->save();
 
         $payload = json_encode(array("mensaje" => "Producto creado con exito"));
 
@@ -25,7 +29,8 @@ class ProductoController extends Producto implements IApiUsable
 
     public function TraerTodos($request, $response, $args)
     {
-        $lista = Producto::obtenerTodos();
+        $lista = Producto::all();
+
         $payload = json_encode(array("listaProductos" => $lista));
 
         $response->getBody()->write($payload);
@@ -35,7 +40,7 @@ class ProductoController extends Producto implements IApiUsable
 
     public function TraerUno($request, $response, $args)
     {
-        $producto = Producto::obtenerProducto($args['nombre_producto']);
+        $producto = Producto::obtenerProductoNombre($args['nombre_producto']);
         $payload = json_encode($producto);
 
         $response->getBody()->write($payload);
@@ -45,14 +50,15 @@ class ProductoController extends Producto implements IApiUsable
     
     public function ModificarUno($request, $response, $args)
     {
-        parse_str(file_get_contents("php://input"), $putData);
+        //Obtengo los parametros
+        $parametros = $request->getParsedBody();
         
-        $producto = Producto::obtenerProducto($args['nombre_producto']);
-        $producto->nombre = $putData['nombre'];
-        $producto->precio = floatval($putData['precio']);
-        $producto->zona_preparacion = $putData['zona_preparacion'];
+        $producto = Producto::find($parametros['id']);
+        $producto->nombre = $parametros['nombre'];
+        $producto->precio = floatval($parametros['precio']);
+        $producto->zona_preparacion = $parametros['zona_preparacion'];
 
-        Producto::modificarProducto($producto);
+        $producto->save();
 
         $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
 
@@ -64,9 +70,22 @@ class ProductoController extends Producto implements IApiUsable
     public function BorrarUno($request, $response, $args)
     {
         $id_producto = intval($args['id_producto']);
-        Producto::borrarProducto($id_producto);
+        Producto::find($id_producto)->delete();
 
         $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
+
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function TraerTodosZonaPreparacion($request, $response, $args)
+    {
+        $zona_preparacion = $args['zona_preparacion'];
+
+        $lista = Producto::where('zona_preparacion', $zona_preparacion)->get();
+
+        $payload = json_encode(array("listaProductos" => $lista));
 
         $response->getBody()->write($payload);
         return $response

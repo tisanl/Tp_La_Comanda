@@ -1,12 +1,35 @@
 <?php
 
-class Producto
-{
-    public $id;
-    public $nombre;
-    public $precio;
-    public $zona_preparacion;
+namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Producto extends Model
+{
+    use SoftDeletes;
+    
+    //public $id;
+    //public $nombre;
+    //public $precio;
+    //public $zona_preparacion;
+    //protected $primaryKey = 'id';
+    protected $table = 'productos';
+    public $incrementing = true;
+    //public $timestamps = false;
+
+    //const DELETED_AT = 'fecha_baja';
+
+    protected $fillable = [
+        'nombre', 'precio', 'zona_preparacion'
+    ];
+
+    public static function obtenerProductoNombre($nombre)
+    {
+        return Producto::where('nombre', $nombre)->first();
+    }
+
+/*
     public function __construct(){}
 
     public function crearProducto()
@@ -28,18 +51,10 @@ class Producto
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Producto');
-    }
+    }*/
 
-    public static function obtenerProducto($nombre_producto)
-    {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, nombre, precio, zona_preparacion FROM productos WHERE nombre = :nombre_producto");
-        $consulta->bindValue(':nombre_producto', $nombre_producto, PDO::PARAM_STR);
-        $consulta->execute();
-
-        return $consulta->fetchObject('Producto');
-    }
-
+    
+/*
     public static function modificarProducto($producto)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
@@ -59,5 +74,5 @@ class Producto
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->bindValue(':fecha_baja', date_format($fecha, 'Y-m-d H:i:s'));
         $consulta->execute();
-    }
+    }*/
 }
