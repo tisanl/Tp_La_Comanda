@@ -77,7 +77,7 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->get('[/]', \UsuarioController::class . ':TraerTodos');
     $group->get('/{nombre_usuario}', \UsuarioController::class . ':TraerUno');
     $group->post('[/]', \UsuarioController::class . ':CargarUno');
-    $group->put('/{nombre_usuario}', \UsuarioController::class . ':ModificarUno');
+    $group->put('[/]', \UsuarioController::class . ':ModificarUno');
     $group->delete('/{id_usuario}', \UsuarioController::class . ':BorrarUno');
   });
 
@@ -100,7 +100,7 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
   $group->get('[/]', \MesaController::class . ':TraerTodos');
   $group->get('/{codigo_unico}', \MesaController::class . ':TraerUno');
   $group->post('[/]', \MesaController::class . ':CargarUno');
-  $group->put('/{codigo_unico}', \MesaController::class . ':ModificarUno');
+  $group->put('[/]', \MesaController::class . ':ModificarUno');
   $group->delete('/{id_mesa}', \MesaController::class . ':BorrarUno');
 });
 
@@ -127,6 +127,7 @@ $app->group('/pedidoProducto', function (RouteCollectorProxy $group) {
 // =======================================================================================================//
 $app->post('/Loggin', \Logger::class . ':LogOperacion')->add(new LoggerMiddleware())->add(new ValidarBodyMiddleware(array('nombre_usuario','clave')));
 
+/*
 // =======================================================================================================//
 // ============================= Rutas de JWT =========================================================== //
 // =======================================================================================================//
@@ -232,6 +233,6 @@ $app->group('/auth', function (RouteCollectorProxy $group) {
   });
 
 });
-
+*/
 
 $app->run();

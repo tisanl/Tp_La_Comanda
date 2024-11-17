@@ -2,7 +2,9 @@
 require_once './models/Usuario.php';
 require_once './interfaces/IApiUsable.php';
 
-class UsuarioController extends Usuario implements IApiUsable
+use \App\Models\Usuario as Usuario;
+
+class UsuarioController implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
@@ -11,10 +13,10 @@ class UsuarioController extends Usuario implements IApiUsable
         // Creamos el usuario
         $usuario = new Usuario();
         $usuario->usuario = $parametros['usuario'];
-        $usuario->clave = $parametros['clave'];
+        $usuario->clave = password_hash($parametros['clave'], PASSWORD_DEFAULT);
         $usuario->tipo = $parametros['tipo'];
         $usuario->estado = "activo";
-        $usuario->crearUsuario();
+        $usuario->save();
 
         $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
 
@@ -25,7 +27,7 @@ class UsuarioController extends Usuario implements IApiUsable
 
     public function TraerTodos($request, $response, $args)
     {
-        $lista = Usuario::obtenerTodos();
+        $lista = Usuario::all();
         $payload = json_encode(array("listaUsuario" => $lista));
 
         $response->getBody()->write($payload);
@@ -35,7 +37,7 @@ class UsuarioController extends Usuario implements IApiUsable
 
     public function TraerUno($request, $response, $args)
     {
-        $usuario = Usuario::obtenerUsuario($args['nombre_usuario']);
+        $usuario = Usuario::where('usuario', $args['nombre_usuario'])->first();
         $payload = json_encode($usuario);
 
         $response->getBody()->write($payload);
@@ -45,15 +47,16 @@ class UsuarioController extends Usuario implements IApiUsable
 
     public function ModificarUno($request, $response, $args)
     {
-        parse_str(file_get_contents("php://input"), $putData);
+        //Obtengo los parametros
+        $parametros = $request->getParsedBody();
 
-        $usuario = Usuario::obtenerUsuario($args['nombre_usuario']);
-        $usuario->usuario = $putData['usuario'];
-        $usuario->clave = password_hash($putData['clave'], PASSWORD_DEFAULT);
-        $usuario->tipo = $putData['tipo'];
-        $usuario->estado = $putData['estado'];
+        $usuario = Usuario::find($parametros['id']);
+        $usuario->usuario = $parametros['usuario'];
+        $usuario->clave = password_hash($parametros['clave'], PASSWORD_DEFAULT);
+        $usuario->tipo = $parametros['tipo'];
+        $usuario->estado = $parametros['estado'];
 
-        Usuario::modificarUsuario($usuario);
+        $usuario->save();
 
         $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
 
@@ -65,7 +68,7 @@ class UsuarioController extends Usuario implements IApiUsable
     public function BorrarUno($request, $response, $args)
     {
         $id_usuario = intval($args['id_usuario']);
-        Usuario::borrarUsuario($id_usuario);
+        Usuario::find($id_usuario)->delete();
 
         $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
 

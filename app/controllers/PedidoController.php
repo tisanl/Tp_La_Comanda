@@ -2,7 +2,10 @@
 require_once './models/Pedido.php';
 require_once './interfaces/IApiUsable.php';
 
-class PedidoController extends Pedido implements IApiUsable
+use \App\Models\Pedido as Pedido;
+use \App\Models\Mesa as Mesa;
+
+class PedidoController implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
@@ -17,15 +20,11 @@ class PedidoController extends Pedido implements IApiUsable
         // Genero codigo alfanumerico
         $pedido->codigo_alfanumerico = generarCodigoAleatorio(7);
 
-        // Obtengo la fecha de ahora y la guardo
-        $fecha = new DateTime("now", new DateTimeZone("America/Argentina/Buenos_Aires"));
-        $pedido->fecha = $fecha->format('Y-m-d H:i:s');
-
         // Estado por defecto
         $pedido->estado = "en_preparacion";
 
         // Busco la mesa y guardo el id
-        $mesa = Mesa::obtenerMesa($parametros['codigo_mesa']);
+        $mesa = Mesa::where('codigo_unico', $parametros['codigo_mesa'])->first();
         $pedido->id_mesa = $mesa->id;
         
         // Guardo el nombre del cliente
@@ -37,7 +36,7 @@ class PedidoController extends Pedido implements IApiUsable
         $pedido->foto = $rutaDestino;
         
         // Creo el pedido
-        $pedido->crearPedido();
+        $pedido->save();
 
         $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
 
@@ -48,7 +47,7 @@ class PedidoController extends Pedido implements IApiUsable
 
     public function TraerTodos($request, $response, $args)
     {
-        $lista = Pedido::obtenerTodos();
+        $lista = Pedido::all();
         $payload = json_encode(array("listaPedidos" => $lista));
 
         $response->getBody()->write($payload);
@@ -59,7 +58,7 @@ class PedidoController extends Pedido implements IApiUsable
     public function TraerUno($request, $response, $args)
     {
         $codigo_alfanumerico = $args['codigo_alfanumerico'];
-        $pedido = Pedido::obtenerPedido($codigo_alfanumerico);
+        $pedido = Pedido::where("codigo_alfanumerico", $codigo_alfanumerico);
         $payload = json_encode($pedido);
 
         $response->getBody()->write($payload);
@@ -69,32 +68,32 @@ class PedidoController extends Pedido implements IApiUsable
     
     public function ModificarUno($request, $response, $args)
     {
-        parse_str(file_get_contents("php://input"), $putData);
+        $parametros = $request->getParsedBody();
+
+        $pedido = Pedido::find($parametros['id']);
+
+        if($parametros['fecha_estimada_listo'] != null)
+        //$pedido->fecha_estimada_listo = DateTime::createFromFormat('Y-m-d H:i:s', $parametros['fecha_estimada_listo']);
+        $pedido->fecha_estimada_listo = $parametros['fecha_estimada_listo'];
         
-        $pedido = Pedido::obtenerPedido($args['codigo_alfanumerico']);
-        
-        if($putData['tiempo_preparacion'] != null)
-        //$pedido->tiempo_preparacion = DateTime::createFromFormat('Y-m-d H:i:s', $putData['tiempo_preparacion']);
-        $pedido->tiempo_preparacion = $putData['tiempo_preparacion'];
-        
-        if($putData['estado'] != null)
-        $pedido->estado = $putData['estado'];
+        if($parametros['estado'] != null)
+        $pedido->estado = $parametros['estado'];
 
         // Busco la mesa y guardo el id
-        if($putData['codigo_mesa'] != null){
-          $mesa = Mesa::obtenerMesa($putData['codigo_mesa']);
+        if($parametros['codigo_mesa'] != null){
+          $mesa = Mesa::where('codigo_unico', $parametros['codigo_mesa'])->first();
           $pedido->id_mesa = $mesa->id;
         }
 
-        if($putData['nombre_cliente'] != null)
-        $pedido->nombre_cliente = $putData['nombre_cliente'];
+        if($parametros['nombre_cliente'] != null)
+        $pedido->nombre_cliente = $parametros['nombre_cliente'];
 
-        if($putData['id_encuesta'] != null)
-        $pedido->id_encuesta = $putData['id_encuesta'];
+        if($parametros['id_encuesta'] != null)
+        $pedido->id_encuesta = $parametros['id_encuesta'];
 
-        Pedido::modificarPedido($pedido);
+        $pedido->save();
 
-        $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
+        $payload = json_encode(array("mensaje" => "Pedido modificado con exito"));
 
         $response->getBody()->write($payload);
         return $response
@@ -103,10 +102,10 @@ class PedidoController extends Pedido implements IApiUsable
 
     public function BorrarUno($request, $response, $args)
     {
-        $productoId = intval($args['productoId']);
-        Producto::borrarProducto($productoId);
+        $pedidoId = intval($args['pedidoId']);
+        Pedido::find($pedidoId);
 
-        $payload = json_encode(array("mensaje" => "Producto borrado con exito"));
+        $payload = json_encode(array("mensaje" => "Pedido borrado con exito"));
 
         $response->getBody()->write($payload);
         return $response

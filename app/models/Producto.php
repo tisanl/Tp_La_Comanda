@@ -8,16 +8,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Producto extends Model
 {
     use SoftDeletes;
-    
-    //public $id;
-    //public $nombre;
-    //public $precio;
-    //public $zona_preparacion;
-    //protected $primaryKey = 'id';
     protected $table = 'productos';
     public $incrementing = true;
+    //protected $primaryKey = 'id';
     //public $timestamps = false;
-
     //const DELETED_AT = 'fecha_baja';
 
     protected $fillable = [
@@ -29,6 +23,10 @@ class Producto extends Model
         return Producto::where('nombre', $nombre)->first();
     }
 
+    //public $id;
+    //public $nombre;
+    //public $precio;
+    //public $zona_preparacion;
 /*
     public function __construct(){}
 

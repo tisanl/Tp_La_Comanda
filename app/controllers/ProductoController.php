@@ -83,7 +83,7 @@ class ProductoController implements IApiUsable
     {
         $zona_preparacion = $args['zona_preparacion'];
 
-        $lista = Producto::where('zona_preparacion', $zona_preparacion)->get();
+        $lista = Producto::wherezona_preparacion($zona_preparacion)->get();
 
         $payload = json_encode(array("listaProductos" => $lista));
 

@@ -1,7 +1,23 @@
 <?php
 
-class Pedido
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Pedido extends Model
 {
+    use SoftDeletes;
+    protected $table = 'pedidos';
+    public $incrementing = true;
+
+    protected $fillable = [
+        'codigo_alfanumerico', 'fecha_estimada_listo', 'fecha_entrega', 'valor_total', 
+        'estado', 'id_mesa', 'nombre_cliente', 'foto', 'id_encuesta'
+    ];
+
+
+    /*
     public $id;
     public $codigo_alfanumerico;
     public $fecha;
@@ -11,7 +27,9 @@ class Pedido
     public $nombre_cliente;
     public $foto;
     public $id_encuesta;
+    */
 
+    /*
     public function __construct(){}
 
     public function crearPedido()
@@ -75,5 +93,5 @@ class Pedido
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->bindValue(':fecha_baja', date_format($fecha, 'Y-m-d H:i:s'));
         $consulta->execute();
-    }
+    }*/
 }

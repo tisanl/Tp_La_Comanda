@@ -2,7 +2,11 @@
 require_once './models/PedidoProducto.php';
 require_once './interfaces/IApiUsable.php';
 
-class PedidoProductoController extends PedidoProducto implements IApiUsable
+use \App\Models\PedidoProducto as PedidoProducto;
+use \App\Models\Producto as Producto;
+use \App\Models\Pedido as Pedido;
+
+class PedidoProductoController implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
@@ -13,18 +17,18 @@ class PedidoProductoController extends PedidoProducto implements IApiUsable
         $pedidoProducto = new PedidoProducto();
 
         // Busco el id del pedido
-        $pedido = Pedido::obtenerPedido($parametros['codigo_alfanumerico']);
+        $pedido = Pedido::where("codigo_alfanumerico", $parametros['codigo_alfanumerico']);
         $pedidoProducto->id_pedido = $pedido->id;
 
         // Busco el producto
-        $producto = Producto::obtenerProducto($parametros['nombre_producto']);
+        $producto = Producto::obtenerProductoNombre($parametros['nombre_producto']);
         $pedidoProducto->id_producto = $producto->id;
         $pedidoProducto->cantidad = $parametros['cantidad'];
         $pedidoProducto->precio = $producto->precio * $pedidoProducto->cantidad;
 
         $pedidoProducto->estado = "para_preparar";
 
-        $pedidoProducto->crearPedidoProducto();
+        $pedidoProducto->save();
 
         $payload = json_encode(array("mensaje" => "PedidoProducto creado con exito"));
 
@@ -35,7 +39,7 @@ class PedidoProductoController extends PedidoProducto implements IApiUsable
 
     public function TraerTodos($request, $response, $args)
     {
-        $lista = PedidoProducto::obtenerTodos();
+        $lista = PedidoProducto::all();
         $payload = json_encode(array("listaPedidoProducto" => $lista));
 
         $response->getBody()->write($payload);
@@ -45,7 +49,7 @@ class PedidoProductoController extends PedidoProducto implements IApiUsable
 
     public function TraerUno($request, $response, $args)
     {
-        $pedidoProducto = PedidoProducto::obtenerPedidoProducto($args['id']);
+        $pedidoProducto = PedidoProducto::find($args['id']);
         $payload = json_encode($pedidoProducto);
 
         $response->getBody()->write($payload);
@@ -55,16 +59,15 @@ class PedidoProductoController extends PedidoProducto implements IApiUsable
     
     public function ModificarUno($request, $response, $args)
     {
-        parse_str(file_get_contents("php://input"), $putData);
+        $parametros = $request->getParsedBody();
         
-        $producto = Producto::obtenerProducto($args['nombre_producto']);
-        $producto->nombre = $putData['nombre'];
-        $producto->precio = floatval($putData['precio']);
-        $producto->zona_preparacion = $putData['zona_preparacion'];
+        $pedidoProducto = PedidoProducto::find($parametros['id']);
+        $pedidoProducto->estado = $parametros['estado'];
+        $pedidoProducto->fecha_estimada_listo = $parametros['fecha_estimada_listo'];
 
-        Producto::modificarProducto($producto);
+        $pedidoProducto->save();
 
-        $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
+        $payload = json_encode(array("mensaje" => "PedidoProducto modificado con exito"));
 
         $response->getBody()->write($payload);
         return $response
@@ -73,10 +76,10 @@ class PedidoProductoController extends PedidoProducto implements IApiUsable
 
     public function BorrarUno($request, $response, $args)
     {
-        $id_producto = intval($args['id_producto']);
-        Producto::borrarProducto($id_producto);
+        $id_pedido_producto = intval($args['id_pedido_producto']);
+        PedidoProducto::find($id_pedido_producto)->delete();
 
-        $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
+        $payload = json_encode(array("mensaje" => "PedidoProducto borrado con exito"));
 
         $response->getBody()->write($payload);
         return $response

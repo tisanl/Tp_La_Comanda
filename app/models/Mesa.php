@@ -1,11 +1,25 @@
 <?php
 
-class Mesa
-{
-    public $id;
-    public $codigo_unico;
-    public $estado;
+namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Mesa extends Model
+{   
+    use SoftDeletes;
+    protected $table = 'mesas';
+    public $incrementing = true;
+
+    protected $fillable = [
+        'codigo_unico', 'estado'
+    ];
+
+    //public $id;
+    //public $codigo_unico;
+    //public $estado;
+
+    /*
     public function __construct(){}
 
     public function crearMesa()
@@ -56,5 +70,5 @@ class Mesa
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->bindValue(':fecha_baja', date_format($fecha, 'Y-m-d H:i:s'));
         $consulta->execute();
-    }
+    }*/
 }

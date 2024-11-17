@@ -1,7 +1,21 @@
 <?php
 
-class PedidoProducto
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class PedidoProducto extends Model
 {
+    use SoftDeletes;
+    protected $table = 'pedido_producto';
+    public $incrementing = true;
+
+    protected $fillable = [
+        'id_pedido', 'id_producto', 'id_usuario', 'precio', 'cantidad', 'fecha_estimada_listo', 'estado'
+    ];
+
+    /*
     public $id;
     public $id_pedido;
     public $id_producto;
@@ -68,5 +82,5 @@ class PedidoProducto
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->bindValue(':fecha_baja', date_format($fecha, 'Y-m-d H:i:s'));
         $consulta->execute();
-    }
+    }*/
 }
