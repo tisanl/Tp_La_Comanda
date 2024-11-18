@@ -18,7 +18,7 @@ class PedidoController implements IApiUsable
         $pedido = new Pedido();
 
         // Genero codigo alfanumerico
-        $pedido->codigo_alfanumerico = generarCodigoAleatorio(7);
+        $pedido->codigo_alfanumerico = generarCodigoAleatorio(5);
 
         // Estado por defecto
         $pedido->estado = "en_preparacion";
@@ -38,7 +38,7 @@ class PedidoController implements IApiUsable
         // Creo el pedido
         $pedido->save();
 
-        $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
+        $payload = json_encode(array("mensaje" => "Pedido creado con exito", "Codigo alfanumerico del pedido" => $pedido->codigo_alfanumerico));
 
         $response->getBody()->write($payload);
         return $response

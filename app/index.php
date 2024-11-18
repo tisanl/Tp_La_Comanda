@@ -125,7 +125,42 @@ $app->group('/pedidoProducto', function (RouteCollectorProxy $group) {
 // =======================================================================================================//
 // ============================= Rutas de Loggin ======================================================== //
 // =======================================================================================================//
-$app->post('/Loggin', \Logger::class . ':LogOperacion')->add(new LoggerMiddleware())->add(new ValidarBodyMiddleware(array('nombre_usuario','clave')));
+$app->post('/Loggin', \Logger::class . ':LogOperacion')->add(\Logger::class . ':GuardarFechaLog')->add(new ValidarBodyMiddleware(array('nombre_usuario','clave')));
+
+// =======================================================================================================//
+// ============================= Rutas de Empleados ================================================ //
+// =======================================================================================================//
+$app->group('/empleado', function (RouteCollectorProxy $group) {
+  $group->get('/{id_usuario}', \PedidoProductoController::class . ':MostrarPendientesPorTipoEmpleado');
+  $group->put('/ActualizarEnPreparacion', \PedidoProductoController::class . ':ActualizarEnPreparacion');
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 // =======================================================================================================//

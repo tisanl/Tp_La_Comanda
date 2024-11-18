@@ -18,6 +18,17 @@ class Usuario extends Model
         'usuario', 'clave', 'tipo', 'estado'
     ];
 
+    public function ObtenerZonaPreparacion(){
+        switch($this->tipo){
+            case "bartender":
+                return "barra_tragos";
+            case "cervecero":
+                return "barra_chopera";
+            case "cocinero":
+                return "cocina-candy_bar";
+        }
+    }
+
     /*
     public $id;
     public $usuario;

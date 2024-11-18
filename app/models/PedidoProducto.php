@@ -15,6 +15,22 @@ class PedidoProducto extends Model
         'id_pedido', 'id_producto', 'id_usuario', 'precio', 'cantidad', 'fecha_estimada_listo', 'estado'
     ];
 
+    public function Producto()
+    {
+        return $this->belongsTo(Producto::class, 'id_producto');
+    }
+
+    public function Pedido()
+    {
+        return $this->belongsTo(Pedido::class, 'id_pedido');
+    }
+
+    public function Usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'id_usuario');
+    }
+    
+
     /*
     public $id;
     public $id_pedido;
