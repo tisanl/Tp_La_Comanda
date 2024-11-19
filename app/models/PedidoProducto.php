@@ -15,9 +15,12 @@ class PedidoProducto extends Model
         'id_pedido', 'id_producto', 'id_usuario', 'precio', 'cantidad', 'fecha_estimada_listo', 'estado'
     ];
 
+
+
+    // Esta es la relacion entre el objeto principal PedidoProducto y el objeto Producto al cual hace referencia a traves del Id
     public function Producto()
     {
-        return $this->belongsTo(Producto::class, 'id_producto');
+        return $this->belongsTo(Producto::class, 'id_producto'); // Aca se declara y por parametro se le envia la columna que tiene la clave foranea
     }
 
     public function Pedido()

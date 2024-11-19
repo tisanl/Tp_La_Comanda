@@ -79,7 +79,7 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->post('[/]', \UsuarioController::class . ':CargarUno');
     $group->put('[/]', \UsuarioController::class . ':ModificarUno');
     $group->delete('/{id_usuario}', \UsuarioController::class . ':BorrarUno');
-  });
+  })->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('socio')));
 
 // =======================================================================================================//
 // ============================= Rutas de Productos ===================================================== //
@@ -128,13 +128,37 @@ $app->group('/pedidoProducto', function (RouteCollectorProxy $group) {
 $app->post('/Loggin', \Logger::class . ':LogOperacion')->add(\Logger::class . ':GuardarFechaLog')->add(new ValidarBodyMiddleware(array('nombre_usuario','clave')));
 
 // =======================================================================================================//
-// ============================= Rutas de Empleados ================================================ //
+// ============================= Rutas de Empleados ===================================================== //
 // =======================================================================================================//
 $app->group('/empleado', function (RouteCollectorProxy $group) {
-  $group->get('/{id_usuario}', \PedidoProductoController::class . ':MostrarPendientesPorTipoEmpleado');
+  $group->get('/MostrarPendientes', \PedidoProductoController::class . ':MostrarPendientesPorTipoEmpleado');
   $group->put('/ActualizarEnPreparacion', \PedidoProductoController::class . ':ActualizarEnPreparacion');
-});
+  $group->put('/ActualizarListoParaServir', \PedidoProductoController::class . ':ActualizarListoParaServir');
+})->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('socio','cocinero','cervecero','bartender')));
 
+// =======================================================================================================//
+// ============================= Rutas de Mozos ========================================================= //
+// =======================================================================================================//
+$app->group('/mozo', function (RouteCollectorProxy $group) {
+  $group->get('/MostrarPedidosListos', \PedidoController::class . ':MostrarListosParaServir');
+  $group->put('/ActualizarEstadoEntregado', \PedidoController::class . ':ActualizarEstadoEntregado');
+  $group->put('/ActualizarEstadoClientePagando', \MesaController::class . ':ActualizarEstadoClientePagando');
+  $group->put('/ActualizarEstadoLibre', \MesaController::class . ':ActualizarEstadoLibre');
+})->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('socio','mozo')));
+
+// =======================================================================================================//
+// ============================= Rutas de Socios ======================================================== //
+// =======================================================================================================//
+$app->group('/socio', function (RouteCollectorProxy $group){
+  $group->put('/ActualizarEstadoCerrada', \MesaController::class . ':ActualizarEstadoCerrada');
+})->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('socio')));
+
+// =======================================================================================================//
+// ============================= Rutas de Clientes ====================================================== //
+// =======================================================================================================//
+$app->group('/cliente', function (RouteCollectorProxy $group){
+  $group->post('/ObtenerEstadoPedido', \PedidoController::class . ':ObtenerEstadoPedido');
+});
 
 
 

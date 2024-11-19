@@ -70,4 +70,67 @@ class MesaController implements IApiUsable
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public static function ActualizarEstadoClientePagando($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+
+        $mesa = Mesa::find($parametros['id_mesa']);
+
+        if($mesa != null && $mesa->estado == 'cliente_comiendo'){
+            $mesa->estado = 'cliente_pagando';
+            $mesa->save();
+
+            $payload = json_encode(array("Mesa" => $mesa));
+        }  
+        else{
+          $payload = json_encode(array("Error" => "La mesa no existe o no estan comiendo"));
+        }
+        
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function ActualizarEstadoCerrada($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+
+        $mesa = Mesa::find($parametros['id_mesa']);
+
+        if($mesa != null && $mesa->estado == 'libre'){
+            $mesa->estado = 'cerrada';
+            $mesa->save();
+
+            $payload = json_encode(array("Mesa" => $mesa));
+        }  
+        else{
+          $payload = json_encode(array("Error" => "La mesa no existe o aun no esta libre"));
+        }
+        
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function ActualizarEstadoLibre($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+
+        $mesa = Mesa::find($parametros['id_mesa']);
+
+        if($mesa != null && $mesa->estado == 'cliente_pagando'){
+            $mesa->estado = 'libre';
+            $mesa->save();
+
+            $payload = json_encode(array("Mesa" => $mesa));
+        }  
+        else{
+          $payload = json_encode(array("Error" => "La mesa no existe o no esta cerrada"));
+        }
+        
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
 }
