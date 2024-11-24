@@ -76,4 +76,16 @@ class UsuarioController implements IApiUsable
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public function DescargarArchivoLog($request, $response, $args)
+    {
+        $archivo = fopen("ingresos.csv", "r");
+        $contenido = fread($archivo, filesize("ingresos.csv"));
+        fclose($archivo);
+
+        $response->getBody()->write($contenido);
+        return $response
+          ->withHeader('Content-Type', 'text/csv')
+          ->withHeader('Content-Disposition', 'attachment; filename="archivo.csv"');
+    }
 }

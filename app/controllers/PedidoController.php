@@ -4,6 +4,7 @@ require_once './interfaces/IApiUsable.php';
 
 use \App\Models\Pedido as Pedido;
 use \App\Models\Mesa as Mesa;
+use \App\Models\Encuesta as Encuesta;
 
 class PedidoController implements IApiUsable
 {
@@ -42,7 +43,7 @@ class PedidoController implements IApiUsable
             // Creo el pedido
             $pedido->save();
     
-            $payload = json_encode(array("mensaje" => "Pedido creado con exito", "Codigo alfanumerico del pedido" => $pedido->codigo_alfanumerico));
+            $payload = json_encode(array("mensaje" => "Pedido creado con exito", "Codigo alfanumerico del pedido" => $pedido->codigo_alfanumerico, "Id del pedido" => $pedido->id));
         }else{
             $payload = json_encode(array("mensaje" => 'No existe una mesa con ese codigo'));
         }
@@ -191,6 +192,50 @@ class PedidoController implements IApiUsable
               {
                   $payload = json_encode(array("Error" => "El codigo no corresponde a ninguna mesa"));
               }
+        }  
+        else
+        {
+          $payload = json_encode(array("Error" => "El codigo no corresponde a ningun pedido"));
+        }
+        
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function SubirEncuesta($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+
+        $pedido = Pedido::where("codigo_alfanumerico", $parametros['codigo_pedido'])->first();
+        
+        if($pedido != null){
+              if($pedido->id_encuesta != null)
+              {
+                  $payload = json_encode(array("Error" => "El pedido ya tiene una encuesta asociada"));
+                  $response->getBody()->write($payload);
+                  return $response
+                    ->withHeader('Content-Type', 'application/json');
+              }
+              $mesa = $pedido->Mesa;
+              if($parametros['codigo_mesa'] == $mesa->codigo_unico)
+              {
+                  if($pedido->estado == "entregado")
+                  {
+                      if(strlen($parametros['breve_descripcion'])<66){
+                        $request = $request->withAttribute('mesa', $mesa);
+                        $encuesta = EncuestaController::RegistrarUno($request);
+
+                        $pedido->id_encuesta = $encuesta->id;
+                        $pedido->save();
+
+                        $payload = json_encode(array("Estado" => "Se registro la encuesta y se asocio al pedido"));
+                      }
+                    else $payload = json_encode(array("Estado" => "La descripcion no puede suuperar los 66 caracteres"));
+                  }
+                  else $payload = json_encode(array("Estado" => "El pedido no fue entregado aun"));
+              }
+              else $payload = json_encode(array("Error" => "El codigo no corresponde a ninguna mesa"));
         }  
         else
         {

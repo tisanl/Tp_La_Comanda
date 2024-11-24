@@ -9,9 +9,11 @@ use \App\Models\Usuario as Usuario;
 class AuthMiddleware
 {
     public $usuarios_admitidos = [];
+    public $motivo = '';
 
-    public function __construct($usuarios_admitidos) {
-        $this->usuarios_admitidos = $usuarios_admitidos;
+    public function __construct($datos) {
+        $this->usuarios_admitidos = $datos['usuarios_admitidos'];
+        $this->motivo = $datos['motivo'];
     }
 
     /**
@@ -28,8 +30,8 @@ class AuthMiddleware
         $token = trim(explode("Bearer", $header)[1]);
 
         try {
-            AutentificadorJWT::VerificarToken($token);
-            
+            AutentificadorJWT::VerificarToken($token);    
+
             $data = AutentificadorJWT::ObtenerData($token);
 
             $usuario = Usuario::find($data->id_usuario);
@@ -37,40 +39,45 @@ class AuthMiddleware
             if(in_array($usuario->tipo,$this->usuarios_admitidos)){
                 // Guardo este atributo en el request
                 $request = $request->withAttribute('usuario', $usuario);
+                $request = $request->withAttribute('motivo', $this->motivo);
+
                 // Del autentificador pasa a la siguiente capa
-                $response = $handler->handle($request);
+                $response = $handler->handle($request);                
             }
             else{
                 $response = new Response();
                 $payload = json_encode(array('Error' => 'El usuario no tiene permiso para esta funcion'));
                 $response->getBody()->write($payload);
+                return $response->withHeader('Content-Type', 'application/json');
             }
             
         } catch (Exception $e) {
             $response = new Response();
             $payload = json_encode(array('mensaje' => 'ERROR: Hubo un error con el TOKEN'));
             $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json');
         }
         
         // Esto es despues de que pegue la vuelta
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response;
     }
 
     public function GuardarLogPostAuth(Request $request, RequestHandler $handler): Response
     {   
         $usuario = $request->getAttribute('usuario');
+        $motivo = $request->getAttribute('motivo');
 
-        $cadena = $usuario->id . "," . $usuario->usuario . "," . date('Y-m-d H:i:s') . PHP_EOL;
+        $cadena = $usuario->id . "," . $usuario->usuario . "," . date('Y-m-d H:i:s') . "," . $motivo. PHP_EOL;
 
-        $archivo = fopen("ingresos.csv", "a"); // append / agregar
+        $archivo = fopen(PATH_INGRESOS, "a"); // append / agregar
         fwrite($archivo, $cadena);
 
         fclose($archivo);
-
+        
         // Guardo la fecha y paso a la siguiente capa
         $response = $handler->handle($request);
+
+        return $response;
         
-        // Esto es despues de que pegue la vuelta
-        return $response->withHeader('Content-Type', 'application/json');
     }
 }

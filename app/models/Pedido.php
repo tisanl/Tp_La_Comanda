@@ -20,6 +20,7 @@ class Pedido extends Model
     {
         return $this->belongsTo(Mesa::class, 'id_mesa'); // Aca se declara y por parametro se le envia la columna que tiene la clave foranea
     }
+
     /*
     public $id;
     public $codigo_alfanumerico;

@@ -15,6 +15,12 @@ class Mesa extends Model
         'codigo_unico', 'estado'
     ];
 
+    // Aca la relacion es inversa, le estoy diciendo que la mesa tiene una relacion con pedidos, que cada uno tiene el id de una mesa
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class, 'id_mesa'); // 'id_mesa' es la clave foránea
+    }
+
     //public $id;
     //public $codigo_unico;
     //public $estado;

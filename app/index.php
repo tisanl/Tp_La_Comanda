@@ -14,13 +14,15 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+const PATH_INGRESOS = __DIR__ . "/files/ingresos.csv";
+
 require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
 require_once './controllers/PedidoProductoController.php';
+require_once './controllers/EncuestaController.php';
 
-require_once './middlewares/LoggerMiddleware.php';
 require_once './middlewares/AuthMiddleware.php';
 require_once './middlewares/Logger.php';
 require_once './middlewares/ValidarBodyMiddleware.php';
@@ -79,7 +81,7 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->post('[/]', \UsuarioController::class . ':CargarUno');
     $group->put('[/]', \UsuarioController::class . ':ModificarUno');
     $group->delete('/{id_usuario}', \UsuarioController::class . ':BorrarUno');
-  })->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('socio')));
+  })->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('usuarios_admitidos' => array('socio'),'motivo' => 'Cosas')));
 
 // =======================================================================================================//
 // ============================= Rutas de Productos ===================================================== //
@@ -134,7 +136,8 @@ $app->group('/empleado', function (RouteCollectorProxy $group) {
   $group->get('/MostrarPendientes', \PedidoProductoController::class . ':MostrarPendientesPorTipoEmpleado');
   $group->put('/ActualizarEnPreparacion', \PedidoProductoController::class . ':ActualizarEnPreparacion');
   $group->put('/ActualizarListoParaServir', \PedidoProductoController::class . ':ActualizarListoParaServir');
-})->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('socio','cocinero','cervecero','bartender')));
+})->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('usuarios_admitidos' => array('socio', 'cocinero', 'cervecero', 'bartender'),
+                                                                                      'motivo' => 'Cosas')));
 
 // =======================================================================================================//
 // ============================= Rutas de Mozos ========================================================= //
@@ -144,20 +147,26 @@ $app->group('/mozo', function (RouteCollectorProxy $group) {
   $group->put('/ActualizarEstadoEntregado', \PedidoController::class . ':ActualizarEstadoEntregado');
   $group->put('/ActualizarEstadoClientePagando', \MesaController::class . ':ActualizarEstadoClientePagando');
   $group->put('/ActualizarEstadoLibre', \MesaController::class . ':ActualizarEstadoLibre');
-})->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('socio','mozo')));
+})->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('usuarios_admitidos' => array('socio', 'mozo'),
+                                                                                                                    'motivo' => 'Cosas')));
 
 // =======================================================================================================//
 // ============================= Rutas de Socios ======================================================== //
 // =======================================================================================================//
 $app->group('/socio', function (RouteCollectorProxy $group){
   $group->put('/ActualizarEstadoCerrada', \MesaController::class . ':ActualizarEstadoCerrada');
-})->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('socio')));
+  $group->get('/DescargarArchivoLog', \UsuarioController::class . ':DescargarArchivoLog');
+  $group->get('/BuscarMasUsada', \MesaController::class . ':BuscarMasUsada');
+  $group->get('/BuscarMejoresComentarios', \EncuestaController::class . ':BuscarMejoresComentarios');
+  $group->post('/RegistrarDesdeCsv', \ProductoController::class . ':RegistrarDesdeCsv');
+})->add(\AuthMiddleware::class . ':GuardarLogPostAuth')->add(new AuthMiddleware(array('usuarios_admitidos' => array('socio'),'motivo' => 'Cosas')));
 
 // =======================================================================================================//
 // ============================= Rutas de Clientes ====================================================== //
 // =======================================================================================================//
 $app->group('/cliente', function (RouteCollectorProxy $group){
   $group->post('/ObtenerEstadoPedido', \PedidoController::class . ':ObtenerEstadoPedido');
+  $group->post('/SubirEncuesta', \PedidoController::class . ':SubirEncuesta');
 });
 
 

@@ -91,4 +91,49 @@ class ProductoController implements IApiUsable
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public function RegistrarDesdeCsv($request, $response, $args)
+    {
+        $archivos = $request->getUploadedFiles();
+        $archivo_csv = $archivos['productos'];
+
+        if($archivo_csv != null){
+            $nombre_archivo = $archivo_csv->getClientFilename();
+            $extension = pathinfo($nombre_archivo, PATHINFO_EXTENSION);
+            
+            if($extension == 'csv'){
+                $ruta_temporal = $archivo_csv->getStream()->getMetadata('uri');
+                $archivo_csv_abierto = fopen($ruta_temporal, "r");
+
+                // Lectura del header
+                $lectura = fgets($archivo_csv_abierto);
+                $lectura = str_replace(PHP_EOL,"",$lectura);
+                $propiedades = explode(",", $lectura);
+
+                var_dump($lectura);
+
+                if(in_array('nombre',$propiedades) && in_array('precio',$propiedades) && in_array('zona_preparacion',$propiedades)){
+                    while(!feof($archivo_csv_abierto)){
+                        $lectura = fgets($archivo_csv_abierto);
+                        $lectura = str_replace(PHP_EOL,"",$lectura);
+                        $arrayDatos = explode(",", $lectura);
+
+                        $producto = new Producto();
+                        $producto->nombre = $arrayDatos[0];
+                        $producto->precio = $arrayDatos[1];
+                        $producto->zona_preparacion = $arrayDatos[2];
+                        $producto->save();
+                    }
+                    $payload = json_encode(array("Mensaje" => "Se subieron todos los productos"));
+                }
+                else $payload = json_encode(array("Error" => "El archivo es csv pero no tiene las propiedades correctas"));                
+            }
+            else $payload = json_encode(array("Error" => "El archivo no es un csv"));
+        }
+        else $payload = json_encode(array("Error" => "No se encontro el archivo"));
+
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
 }

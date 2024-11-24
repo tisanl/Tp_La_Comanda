@@ -3,6 +3,7 @@ require_once './models/Mesa.php';
 require_once './interfaces/IApiUsable.php';
 
 use \App\Models\Mesa as Mesa;
+use \App\Models\Pedido as Pedido;
 
 class MesaController implements IApiUsable
 {
@@ -128,6 +129,25 @@ class MesaController implements IApiUsable
         else{
           $payload = json_encode(array("Error" => "La mesa no existe o no esta cerrada"));
         }
+        
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public static function BuscarMasUsada($request, $response, $args)
+    {
+        $mesa = Mesa::withCount('pedidos')->orderByDesc('pedidos_count')->first();
+      
+        if($mesa != null)
+        {
+            $payload = json_encode(array("Id" => $mesa->id,
+                                          "Codigo unico" => $mesa->codigo_unico));
+        }
+        else{
+            $payload = json_encode(array("Error" => "La mesa no existe o no esta cerrada"));
+        }
+        
         
         $response->getBody()->write($payload);
         return $response

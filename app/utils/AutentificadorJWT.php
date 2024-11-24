@@ -12,7 +12,7 @@ class AutentificadorJWT
         $ahora = time();
         $payload = array(
             'iat' => $ahora,
-            'exp' => $ahora + (1200000),
+            'exp' => $ahora + (20000000),
             'aud' => self::Aud(),
             'data' => $datos,
             'app' => "Tp La Comanda"
@@ -25,6 +25,7 @@ class AutentificadorJWT
         if (empty($token)) {
             throw new Exception("El token esta vacio.");
         }
+        
         try 
         {
             $decodificado = JWT::decode(
@@ -45,6 +46,7 @@ class AutentificadorJWT
         if (empty($token)) {
             throw new Exception("El token esta vacio.");
         }
+
         return JWT::decode(
             $token,
             self::$claveSecreta,

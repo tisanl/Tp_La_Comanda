@@ -18,19 +18,31 @@ class Logger
         
         $usuario = Usuario::where('usuario', $nombre_usuario)->first();
         
+        // Guardo este atributo en el request
+        $request = $request->withAttribute('usuario', $usuario);
+
         // Si el usuario es valido corroboro la contraseña
         if($usuario != null && password_verify($clave,$usuario->clave))
         {
-            // Creo los datos para el jwt
-            $datos = array('id_usuario' => $usuario->id, 'tipo' => $usuario->tipo, 'usuario' => $usuario->usuario,);
-            $token = AutentificadorJWT::CrearToken($datos);
-            // Se agrega a la respuesta el id y nombre del usuario para poder ser guardados en el archivo donde se registran los loggeos
-            $payload = json_encode(array('jwt' => $token, 'usuario_id' => $usuario->id, 'usuario_nombre' => $usuario->usuario));
-
-            // Escribo contenido de la respuesta y la retorno al middlware para registrar la fecha
-            $response->getBody()->write($payload);
-            return $response
-            ->withHeader('Content-Type', 'application/json');
+            if($usuario->estado != 'suspendido'){
+                // Creo los datos para el jwt
+                $datos = array('id_usuario' => $usuario->id, 'tipo' => $usuario->tipo, 'usuario' => $usuario->usuario);
+                $token = AutentificadorJWT::CrearToken($datos);
+                // Se agrega a la respuesta el id y nombre del usuario para poder ser guardados en el archivo donde se registran los loggeos
+                $payload = json_encode(array('jwt' => $token, 'usuario' => $usuario));
+    
+                // Escribo contenido de la respuesta y la retorno al middlware para registrar la fecha
+                $response->getBody()->write($payload);
+                return $response
+                ->withHeader('Content-Type', 'application/json');
+            }
+            else
+            {
+                $payload = json_encode(array('error' => "El usuario esta suspendido, no puede ingresar"));
+                $response->getBody()->write($payload);
+                return $response
+                ->withHeader('Content-Type', 'application/json');
+            }
         }
         else{
             // El usuario no existe y retorno eso
@@ -55,20 +67,17 @@ class Logger
 
         // Evaluo si el cuerpo viene con el token, quiere decir que salo bien y tengo los datos para hacer el log
         if(isset($existingContent->jwt)){
-            $cadena = $existingContent->usuario_id . "," . $existingContent->usuario_nombre . "," . date('Y-m-d H:i:s') . PHP_EOL; 
+            $usuario = $existingContent->usuario;
+            $cadena = $usuario->id . "," . $usuario->usuario . "," . date('Y-m-d H:i:s') . ",El usuario se loggeo". PHP_EOL; 
 
-            $archivo = fopen("ingresos.csv", "a"); // append / agregar
+            $archivo = fopen(PATH_INGRESOS, "a"); // append / agregar
             fwrite($archivo, $cadena);
 
             fclose($archivo);
-            
-            // Elimino lo que no quiero que se vea en el body
-            unset($existingContent->usuario_id);
-            unset($existingContent->usuario_nombre);
 
-            // Creo una nueva respuesta y le guardo el token
             $response = new Response();
-            $response->getBody()->write(json_encode(array('jwt' => $existingContent->jwt)));
+            $payload = json_encode(array('jwt' => $existingContent->jwt));
+            $response->getBody()->write($payload);
         }
 
         // Salgo del middleware o con el mensaje de error de Loggin o el Token
